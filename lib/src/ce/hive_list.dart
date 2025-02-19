@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 /// #### Wrapper class for Hive Box to use it as a [List].
 /// * You MUST register adapter before using this class.
@@ -10,18 +10,22 @@ import 'package:hive/hive.dart';
 /// ```
 ///
 class HiveList<T> {
-  final String boxName;
   final Box<T> _box;
 
-  HiveList(this.boxName, {List<T>? values}) : _box = Hive.box<T>(name: boxName) {
+  HiveList.internal(this._box, List<T>? values) {
     if (values != null) {
       addAll(values);
     }
   }
 
+  static Future<HiveList<T>> create<T>(String boxName, {List<T>? values}) async {
+    final box = await Hive.openBox<T>(boxName);
+    return HiveList<T>.internal(box, values);
+  }
+
   T? operator [](int index) {
     try {
-      return _box.get(index.toString());
+      return _box.getAt(index);
     } catch (e) {
       return null;
     }
@@ -31,7 +35,14 @@ class HiveList<T> {
 
   int get length => _box.length;
 
-  void add(T value) => _box.add(value);
+  void add(T value) {
+    try {
+      _box.add(value);
+      print('Added value to HiveList. HiveList now has ${_box.length} items');
+    } catch (e) {
+      print('Failed to add value to HiveList: $e');
+    }
+  }
 
   void addAll(Iterable<T> values) => _box.addAll(values);
 
@@ -49,14 +60,14 @@ class HiveList<T> {
   List<T> toList() {
     List<T> list = [];
     for (int i = 0; i < length; i++) {
-      final value = this[i];
+      final value = _box.getAt(i);
       if (value != null) {
         list.add(value);
       } else {
-        removeAt(i);
+        print('HiveList has null value at index $i. Removing it.');
+        //removeAt(i);
       }
     }
-    print('HiveList has ${list.length} (of $length / box length(${_box.length})) items');
     return list;
   }
 

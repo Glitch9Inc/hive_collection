@@ -1,11 +1,18 @@
 import 'dart:async';
 
-import '../hive_collection.dart';
+import 'package:hive_ce/hive.dart' hide HiveList;
+
+import '../../hive_collection.dart';
 
 class HiveListRx<T> extends HiveList<T> {
   final _controller = StreamController<HiveListEvent<T>>.broadcast();
 
-  HiveListRx(super.boxName, {super.values});
+  HiveListRx._(Box<T> box, List<T>? values) : super.internal(box, values);
+
+  static Future<HiveListRx<T>> create<T>(String boxName, {List<T>? values}) async {
+    final box = await Hive.openBox<T>(boxName);
+    return HiveListRx<T>._(box, values);
+  }
 
   Stream<HiveListEvent<T>> get changes => _controller.stream;
 

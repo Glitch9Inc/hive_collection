@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 /// #### Wrapper class for Hive Box to use it as a [Map].
 /// * You MUST register adapter before using this class.
@@ -17,14 +17,19 @@ import 'package:hive/hive.dart';
 /// * Enum
 /// * DateTime
 class HiveMap<K, V> {
-  final String boxName;
+  //final String boxName;
   final Box<V> _box;
 
   // 생성자에서 Box를 열고 초기화
-  HiveMap(this.boxName, {Map<K, V>? values}) : _box = Hive.box<V>(name: boxName) {
+  HiveMap.internal(this._box, Map<K, V>? values) {
     if (values != null) {
       addAll(values);
     }
+  }
+
+  static Future<HiveMap<K, V>> create<K, V>(String boxName, {Map<K, V>? values}) async {
+    final box = await Hive.openBox<V>(boxName);
+    return HiveMap<K, V>.internal(box, values);
   }
 
   // Map-like operations
@@ -47,7 +52,10 @@ class HiveMap<K, V> {
 
   Iterable<V> get values sync* {
     for (int i = 0; i < _box.length; i++) {
-      yield _box.getAt(i);
+      final value = _box.getAt(i);
+      if (value != null) {
+        yield value;
+      }
     }
   }
 
@@ -57,7 +65,7 @@ class HiveMap<K, V> {
       if (rawKey == null) continue;
 
       final key = HiveMapKey.revert<K>(rawKey);
-      final value = _box.getAt(i) as V?;
+      final value = _box.getAt(i);
 
       if (value != null) {
         yield MapEntry(key, value);
@@ -72,7 +80,7 @@ class HiveMap<K, V> {
 
       // 키와 값 변환 처리
       final key = HiveMapKey.revert<K>(rawKey);
-      final value = _box.getAt(i) as V?;
+      final value = _box.getAt(i);
 
       if (value != null) {
         yield convert(key, value);

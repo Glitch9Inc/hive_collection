@@ -1,17 +1,13 @@
 import 'dart:io';
 
-import 'package:hive/hive.dart';
 import 'package:hive_collection/hive_collection.dart';
-import 'package:isar/isar.dart';
 
 Future<void> main() async {
   // Hive 4에서는 `Hive.init()`이 없으므로 저장할 디렉토리를 직접 설정해야 함
   final directory = Directory.systemTemp.createTempSync();
-  Hive.defaultDirectory = directory.path;
-  await Isar.initialize();
 
   // Map 생성
-  final testMap = HiveMap<String, String>('testBox');
+  final testMap = await HiveMap.create<String, String>('testBox');
 
   // 값 저장
   testMap['key1'] = 'Hello Hive!';

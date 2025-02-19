@@ -12,20 +12,106 @@ and the Flutter guide for
 -->
 
 ## Hive Collection for Dart/Flutter
-Hive Collection is a simple and lightweight wrapper around Hive that provides a more intuitive API for managing lists and collections in Hive. It offers seamless integration with Hive's powerful local storage while making it easier to handle list operations like sorting, filtering, mapping, and more.
+Hive Collection is a lightweight, easy-to-use wrapper for Hive that allows you to use Hive boxes like List and Map. 
+It provides a simple and efficient way to store and retrieve structured data with minimal effort.
 
 ## Features
-- Easy-to-use collection-style API for Hive
-- Supports add, insert, remove, sort, map, where, forEach, and more
-- Seamlessly integrates with Hive's Box<T>
-- Automatically handles null safety and type checking
-- Optimized for Flutter and Dart applications
+- List-like storage: HiveList<T> allows storing data like a Dart List<T>.
+- Map-like storage: HiveMap<K, V> allows storing data like a Dart Map<K, V>.
+- Auto serialization support: Works with fromJson and toJson methods.
+- Supports primitive and custom object types.
+- Handles Hive key conversions for various types (String, int, double, bool, Enum, DateTime).
 
-## Getting started
+## Installation
+Add hive_collection as a dependency in your pubspec.yaml file:
+```yaml
+dependencies:
+  hive_collection:
+    git: https://github.com/Glitch9Inc/hive_collection.git
+```
+Then run:
+```yaml
+flutter pub get
+```
+
+## Initialization
+Before using HiveCollection, ensure Hive is properly initialized and register your adapters:
+```dart
+import 'package:hive_collection/hive_collection.dart';
+
+void main() async {
+  await HiveCollection.ensureInitialized();
+  HiveCollection.registerAdapter(
+    (json) => MyClass.fromJson(json),
+    (myClassInstance) => myClassInstance.toJson(),
+  );
+}
+```
 
 ## Usage
+Using HiveList<T> (List-like Storage)
+```dart
+class MyClass {
+  final String name;
+  final int age;
 
-## Additional information
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+  MyClass({required this.name, required this.age});
+
+  factory MyClass.fromJson(Map<String, dynamic> json) {
+    return MyClass(name: json['name'], age: json['age']);
+  }
+
+  Map<String, dynamic> toJson() => {'name': name, 'age': age};
+}
+
+void main() async {
+  HiveList<MyClass> myList = await HiveList.create<MyClass>('myList');
+  
+  myList.add(MyClass(name: 'Alice', age: 25));
+  myList.add(MyClass(name: 'Bob', age: 30));
+
+  print(myList.toList());
+}
+```
+Using HiveMap<K, V> (Map-like Storage)
+```dart
+void main() async {
+  HiveMap<String, MyClass> myMap = await HiveMap.create<String, MyClass>('myMap');
+
+  myMap['user1'] = MyClass(name: 'Charlie', age: 22);
+  myMap['user2'] = MyClass(name: 'David', age: 28);
+
+  print(myMap.toMap());
+}
+```
+## Supported Key Types
+HiveMap supports the following key types:
+
+- String
+- int
+- double
+- bool
+- Enum
+- DateTime
+
+For custom types, the key will be automatically converted to a String using toString() and parse() methods.
+
+## Converting Data
+Hive requires serialization of custom objects. HiveCollection provides easy registration for fromJson and toJson methods:
+```dart
+HiveCollection.registerAdapter(
+  (json) => MyClass.fromJson(json),
+  (obj) => obj.toJson(),
+);
+```
+
+## Performance Considerations
+- Use HiveMap when storing key-value pairs for quick lookups.
+- Use HiveList when you need ordered data storage with indexed access.
+- Call .dispose() when you're done using a HiveList or HiveMap to free resources.
+
+## License
+This package is open-source and available under the MIT License.
+
+## Contributing
+Contributions are welcome! Feel free to submit a PR or report an issue.

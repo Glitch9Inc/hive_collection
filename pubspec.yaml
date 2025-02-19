@@ -8,10 +8,14 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  hive: ^4.0.0-dev.2
-  isar: ^4.0.0-dev.14
-  isar_flutter_libs: ^4.0.0-dev.13
+  # hive: ^4.0.0-dev.2
+  # isar: ^4.0.0-dev.14
+  # isar_flutter_libs: ^4.0.0-dev.13
   path_provider: ^2.0.11  
+
+  # migrating to hive-ce
+  hive_ce: ^2.10.1
+  hive_ce_flutter: ^2.2.0
 
 dev_dependencies:
   lints: ^5.0.0

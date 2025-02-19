@@ -1,11 +1,18 @@
 import 'dart:async';
 
-import '../hive_collection.dart';
+import 'package:hive_ce/hive.dart';
+
+import '../../hive_collection.dart';
 
 class HiveMapRx<K, V> extends HiveMap<K, V> {
   final _controller = StreamController<HiveMapEvent<K, V>>.broadcast();
 
-  HiveMapRx(super.boxName, {super.values});
+  HiveMapRx._(Box<V> box, Map<K, V>? values) : super.internal(box, values);
+
+  static Future<HiveMapRx<K, V>> create<K, V>(String boxName, {Map<K, V>? values}) async {
+    final box = await Hive.openBox<V>(boxName);
+    return HiveMapRx<K, V>._(box, values);
+  }
 
   Stream<HiveMapEvent<K, V>> get changes => _controller.stream;
 
