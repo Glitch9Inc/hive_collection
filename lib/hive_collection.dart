@@ -19,6 +19,7 @@ export 'src/ce/hive_map_rx.dart';
 
 class HiveCollection {
   static List<String> registeredAdapterIds = [];
+  static Map<String, dynamic Function(String)> registeredKeyAdapters = {};
 
   static Future<void> ensureInitialized() async {
     // dev-v4 initialization
@@ -52,6 +53,15 @@ class HiveCollection {
     Hive.registerAdapter(adapter);
 
     print('[Hive] Registered adapter for $adapterId type');
+  }
+
+  static void registerKeyAdapter<T>(T Function(String) fromString) {
+    final keyId = T.toString();
+    if (registeredKeyAdapters.containsKey(keyId)) {
+      throw Exception('Key adapter for $keyId type is already registered.');
+    }
+    registeredKeyAdapters[keyId] = fromString;
+    print('[Hive] Registered key adapter for $keyId type');
   }
 
   HiveCollection._();

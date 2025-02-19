@@ -93,8 +93,21 @@ HiveMap supports the following key types:
 - bool
 - Enum
 - DateTime
+- Custom key types via key adapters
 
-For custom types, the key will be automatically converted to a String using toString() and parse() methods.
+For custom key types, you can register a key adapter:
+```dart
+HiveCollection.registerKeyAdapter<Uuid>((key) => Uuid.parse(key));
+```
+
+Then you can use it with HiveMap:
+```dart
+var uuidString = "550e8400-e29b-41d4-a716-446655440000";
+var uuid = HiveMapKey.revert<Uuid>(uuidString);
+print(uuid); // Uuid object
+```
+
+🔄 Converting Data
 
 ## Converting Data
 Hive requires serialization of custom objects. HiveCollection provides easy registration for fromJson and toJson methods:

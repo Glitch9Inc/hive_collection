@@ -1,4 +1,6 @@
-import 'package:hive_ce/hive.dart';
+import 'package:hive_ce/hive.dart' hide HiveCollection;
+
+import '../../hive_collection.dart';
 
 /// #### Wrapper class for Hive Box to use it as a [Map].
 /// * You MUST register adapter before using this class.
@@ -128,7 +130,8 @@ abstract class HiveMapKey {
     if (key is Enum) return key.name; // toString() 대신 name 사용
     if (key is int || key is double || key is bool) return key.toString();
     if (key is DateTime) return key.toIso8601String();
-    throw Exception('Unsupported key type');
+    //throw Exception('Unsupported key type');
+    return key.toString();
   }
 
   static K revert<K>(String key) {
@@ -144,7 +147,13 @@ abstract class HiveMapKey {
       } else if (K == bool) {
         return (key == 'true') as K;
       } else {
-        throw Exception('Unsupported key type');
+        //throw Exception('Unsupported key type');
+        if (HiveCollection.registeredKeyAdapters.containsKey(K.toString())) {
+          final keyAdapter = HiveCollection.getKeyAdapter<K>();
+          return keyAdapter(key);
+        }
+
+        throw Exception('Unsupported key type: $K');
       }
     } catch (e) {
       throw Exception('Failed to revert key: $e');
