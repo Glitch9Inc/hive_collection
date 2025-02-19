@@ -1,0 +1,17 @@
+name: hive_collection
+description: A starting point for Dart libraries or applications.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.6.2
+
+# Add regular dependencies here.
+dependencies:
+  hive: ^4.0.0-dev.2
+  isar: ^4.0.0-dev.14
+  isar_flutter_libs: ^4.0.0-dev.13
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.24.0
