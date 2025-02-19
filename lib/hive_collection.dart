@@ -64,6 +64,14 @@ class HiveCollection {
     print('[Hive] Registered key adapter for $keyId type');
   }
 
+  static dynamic Function(String) getKeyAdapter<T>() {
+    final adapterId = T.toString();
+    if (!registeredKeyAdapters.containsKey(adapterId)) {
+      throw Exception('Key adapter for $adapterId type is not registered.');
+    }
+    return registeredKeyAdapters[adapterId]!;
+  }
+
   HiveCollection._();
 }
 
