@@ -1,6 +1,10 @@
-import 'package:hive_ce/hive.dart' hide HiveCollection;
+import 'dart:async';
+
+import 'package:hive_ce/hive.dart' hide HiveList, HiveCollection;
 
 import '../../hive_collection.dart';
+
+part 'hive_map_rx.dart';
 
 /// #### Wrapper class for Hive Box to use it as a [Map].
 /// * You MUST register adapter before using this class.
@@ -18,20 +22,34 @@ import '../../hive_collection.dart';
 /// * bool
 /// * Enum
 /// * DateTime
+/// * Custom key type with registered key adapter
+///
+/// Unsupported key type will throw an exception
+///
+/// #### How to register key adapter:
+/// ```dart
+/// HiveCollection.registerKeyAdapter<MyClass>((key) => MyClass.fromString(key));
+/// ```
+///
 class HiveMap<K, V> {
   //final String boxName;
   final Box<V> _box;
 
   // 생성자에서 Box를 열고 초기화
-  HiveMap.internal(this._box, Map<K, V>? values) {
+  HiveMap._(this._box, Map<K, V>? values) {
     if (values != null) {
       addAll(values);
     }
   }
 
   static Future<HiveMap<K, V>> create<K, V>(String boxName, {Map<K, V>? values}) async {
-    final box = await Hive.openBox<V>(boxName);
-    return HiveMap<K, V>.internal(box, values);
+    if (!Hive.isBoxOpen(boxName)) {
+      final box = await Hive.openBox<V>(boxName);
+      return HiveMap<K, V>._(box, values);
+    } else {
+      final box = Hive.box<V>(boxName);
+      return HiveMap<K, V>._(box, values);
+    }
   }
 
   // Map-like operations
@@ -44,7 +62,8 @@ class HiveMap<K, V> {
     }
   }
 
-  void operator []=(K key, V value) => _box.put(HiveMapKey.parse(key), value);
+  void operator []=(K key, V value) => set(key, value);
+  Future<void> set(K key, V value) => _box.put(HiveMapKey.parse(key), value);
 
   bool containsKey(K key) => _box.containsKey(HiveMapKey.parse(key));
 
@@ -101,26 +120,26 @@ class HiveMap<K, V> {
     return map;
   }
 
-  void addAll(Map<K, V> entries) {
+  Future<void> addAll(Map<K, V> entries) {
     Map<String, V> hiveEntries = {};
     for (final entry in entries.entries) {
       hiveEntries[HiveMapKey.parse(entry.key)] = entry.value;
     }
-    _box.putAll(hiveEntries);
+    return _box.putAll(hiveEntries);
   }
 
   // 값을 삭제
-  void remove(K key) {
-    _box.delete(HiveMapKey.parse(key));
+  Future<void> remove(K key) {
+    return _box.delete(HiveMapKey.parse(key));
   }
 
   // 전체 Map 데이터를 삭제
-  void clear() {
-    _box.clear();
+  Future<int> clear() {
+    return _box.clear();
   }
 
-  void dispose() {
-    _box.close();
+  Future<void> dispose() {
+    return _box.close();
   }
 }
 

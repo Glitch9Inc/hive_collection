@@ -1,13 +1,9 @@
-import 'dart:async';
-
-import 'package:hive_ce/hive.dart' hide HiveList;
-
-import '../../hive_collection.dart';
+part of 'hive_list.dart';
 
 class HiveListRx<T> extends HiveList<T> {
   final _controller = StreamController<HiveListEvent<T>>.broadcast();
 
-  HiveListRx._(Box<T> box, List<T>? values) : super.internal(box, values);
+  HiveListRx._(Box<T> box, List<T>? values) : super._(box, values);
 
   static Future<HiveListRx<T>> create<T>(String boxName, {List<T>? values}) async {
     final box = await Hive.openBox<T>(boxName);
@@ -29,9 +25,9 @@ class HiveListRx<T> extends HiveList<T> {
   }
 
   @override
-  void removeAt(int index) {
+  Future<void> removeAt(int index) async {
     final oldValue = this[index];
-    super.removeAt(index);
+    await super.removeAt(index);
 
     if (oldValue != null) {
       _controller.add(HiveListEvent.removed(index));
@@ -39,19 +35,21 @@ class HiveListRx<T> extends HiveList<T> {
   }
 
   @override
-  void clear() {
+  Future<int> clear() async {
     final oldList = toList();
-    super.clear();
+    final result = await super.clear();
 
     for (int i = 0; i < oldList.length; i++) {
       _controller.add(HiveListEvent.removed(i));
     }
+
+    return result;
   }
 
   @override
-  void addAll(Iterable<T> values) {
+  Future<Iterable<int>> addAll(Iterable<T> values) async {
     final oldList = toList();
-    super.addAll(values);
+    final result = await super.addAll(values);
 
     for (int i = 0; i < values.length; i++) {
       final value = values.elementAt(i);
@@ -62,12 +60,14 @@ class HiveListRx<T> extends HiveList<T> {
         _controller.add(HiveListEvent.updated(i, value));
       }
     }
+
+    return result;
   }
 
   @override
-  void dispose() {
-    _controller.close();
-    super.dispose();
+  Future<void> dispose() async {
+    await _controller.close();
+    return await super.dispose();
   }
 
   void addListener(void Function(HiveListEvent<T> event) listener) {

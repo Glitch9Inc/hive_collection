@@ -9,3 +9,7 @@
 
 ## 1.0.3
 - Supports key adapters for custom key types.
+
+## 1.0.4
+- Applied async operations.
+- Added example.

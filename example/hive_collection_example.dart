@@ -1,29 +1,78 @@
-import 'dart:io';
-
 import 'package:hive_collection/hive_collection.dart';
 
-Future<void> main() async {
-  // Hive 4에서는 `Hive.init()`이 없으므로 저장할 디렉토리를 직접 설정해야 함
-  final directory = Directory.systemTemp.createTempSync();
-  // Hive.defaultDirectory = directory.path;
+class MyClass {
+  MyClass(this.name, this.age);
 
-  // Map 생성
-  final testMap = await HiveMap.create<String, String>('testBox');
+  final String name;
+  final int age;
 
-  // 값 저장
-  testMap['key1'] = 'Hello Hive!';
-  print('Saved value: ${testMap['key1']}');
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'age': age,
+      };
 
-  // 값 조회
-  print('Retrieved value: ${testMap['key1']}');
+  factory MyClass.fromJson(Map<String, dynamic> json) => MyClass(
+        json['name'] as String,
+        json['age'] as int,
+      );
+}
 
-  // 키 존재 여부 확인
-  print('Contains key1: ${testMap.containsKey('key1')}');
+class MyKey {
+  MyKey(this.value);
 
-  // 값 삭제
-  testMap.remove('key1');
-  print('Contains key1: ${testMap.containsKey('key1')}');
+  final MyClass value;
 
-  // 디렉토리 삭제
-  await directory.delete(recursive: true);
+  @override
+  String toString() {
+    return '${value.name}, ${value.age}';
+  }
+
+  factory MyKey.fromString(String string) {
+    final parts = string.split(', ');
+    return MyKey(MyClass(parts[0], int.parse(parts[1])));
+  }
+}
+
+void main() async {
+  await HiveCollection.ensureInitialized();
+  HiveCollection.registerAdapter((json) => MyClass.fromJson(json), (instance) => instance.toJson());
+  HiveCollection.registerKeyAdapter((key) => MyKey.fromString(key));
+
+  // HiveMap
+  final hiveMap = await HiveMap.create<String, MyClass>('hiveMap');
+
+  await hiveMap.set('key1', MyClass('Dave', 30));
+  print('Saved value: ${hiveMap['key1']}');
+  print('Contains key1: ${hiveMap.containsKey('key1')}');
+
+  await hiveMap.remove('key1');
+  print('Removed key1: ${hiveMap.containsKey('key1')}');
+
+  await hiveMap.dispose();
+
+  // HiveMap with custom key type
+  final hiveMapCustomKey = await HiveMap.create<MyKey, MyClass>('hiveMapCustomKey');
+
+  final key = MyKey(MyClass('Key Dave', 30));
+  await hiveMapCustomKey.set(key, MyClass('Dave', 30));
+  print('Saved value: ${hiveMapCustomKey[key]}');
+  print('Contains key: ${hiveMapCustomKey.containsKey(key)}');
+
+  await hiveMapCustomKey.remove(key);
+  print('Removed key: ${hiveMapCustomKey.containsKey(key)}');
+
+  await hiveMapCustomKey.dispose();
+
+  // HiveList
+  final hiveList = await HiveList.create<String>('hiveList');
+
+  await hiveList.add('Hello Hive!');
+  print('Saved value: ${hiveList[0]}');
+  print('Length: ${hiveList.length}');
+  print('Contains value: ${hiveList.contains('Hello Hive!')}');
+
+  await hiveList.removeAt(0);
+  print('Removed value: ${hiveList.contains('Hello Hive!')}');
+
+  await hiveList.dispose();
 }

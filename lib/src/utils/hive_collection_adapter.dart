@@ -1,4 +1,4 @@
-import 'package:hive_ce/hive.dart';
+import 'package:hive_ce/hive.dart' hide HiveList, HiveCollection;
 
 class HiveCollectionAdapter<T> extends TypeAdapter<T> {
   static int _typeId = 0;
@@ -6,7 +6,7 @@ class HiveCollectionAdapter<T> extends TypeAdapter<T> {
 
   @override
   final int typeId;
-  final T Function(dynamic) fromJson;
+  final T Function(Map<String, dynamic>) fromJson;
   final Map<String, dynamic> Function(T) toJson;
 
   HiveCollectionAdapter._(
@@ -15,7 +15,7 @@ class HiveCollectionAdapter<T> extends TypeAdapter<T> {
   ) : typeId = _getTypeId();
 
   static HiveCollectionAdapter<T> create<T>(
-    T Function(dynamic) fromJson,
+    T Function(Map<String, dynamic>) fromJson,
     Map<String, dynamic> Function(T) toJson,
   ) =>
       HiveCollectionAdapter<T>._(fromJson, toJson);
@@ -24,7 +24,7 @@ class HiveCollectionAdapter<T> extends TypeAdapter<T> {
   T read(BinaryReader reader) {
     try {
       final json = reader.readMap();
-      return fromJson(json);
+      return fromJson(json as Map<String, dynamic>);
     } catch (e) {
       print('Failed to read object from Hive: $e');
       rethrow;

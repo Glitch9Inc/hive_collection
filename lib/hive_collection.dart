@@ -1,21 +1,12 @@
 library;
 
-import 'package:hive_ce/hive.dart';
+import 'package:hive_ce/hive.dart' hide HiveList, HiveCollection;
 import 'package:path_provider/path_provider.dart';
 
 import 'src/utils/hive_collection_adapter.dart';
 
-/*
-export 'src/v4/hive_list.dart';
-export 'src/v4/hive_list_rx.dart';
-export 'src/v4/hive_map.dart';
-export 'src/v4/hive_map_rx.dart';
-*/
-
 export 'src/ce/hive_list.dart';
-export 'src/ce/hive_list_rx.dart';
 export 'src/ce/hive_map.dart';
-export 'src/ce/hive_map_rx.dart';
 
 class HiveCollection {
   static List<String> registeredAdapterIds = [];
@@ -31,7 +22,7 @@ class HiveCollection {
     Hive.init(dir.path);
   }
 
-  static void registerAdapter<T>(T Function(dynamic) fromJson, Map<String, dynamic> Function(T) toJson) {
+  static void registerAdapter<T>(T Function(Map<String, dynamic>) fromJson, Map<String, dynamic> Function(T) toJson) {
     // dev-4 adapter registration
     // final adapterId = T.toString();
     // if (registeredAdapterIds.contains(adapterId)) {
@@ -46,7 +37,7 @@ class HiveCollection {
     final adapterId = T.toString();
     if (registeredAdapterIds.contains(adapterId)) {
       throw Exception(
-          'Adapter for $adapterId type is already registered. If you want to register an adapter for the type with the same name, please refactor the type name.');
+          '[Hive] Adapter for $adapterId type is already registered. If you want to register an adapter for the type with the same name, please refactor the type name.');
     }
     registeredAdapterIds.add(adapterId);
     final adapter = HiveCollectionAdapter.create<T>(fromJson, toJson);
@@ -67,7 +58,7 @@ class HiveCollection {
   static dynamic Function(String) getKeyAdapter<T>() {
     final adapterId = T.toString();
     if (!registeredKeyAdapters.containsKey(adapterId)) {
-      throw Exception('Key adapter for $adapterId type is not registered.');
+      throw Exception('[Hive] Key adapter for $adapterId type is not registered.');
     }
     return registeredKeyAdapters[adapterId]!;
   }

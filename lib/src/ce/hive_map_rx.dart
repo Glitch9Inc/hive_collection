@@ -1,13 +1,10 @@
-import 'dart:async';
-
-import 'package:hive_ce/hive.dart';
-
-import '../../hive_collection.dart';
+part of 'hive_map.dart';
 
 class HiveMapRx<K, V> extends HiveMap<K, V> {
   final _controller = StreamController<HiveMapEvent<K, V>>.broadcast();
 
-  HiveMapRx._(Box<V> box, Map<K, V>? values) : super.internal(box, values);
+  // ignore: use_super_parameters
+  HiveMapRx._(Box<V> box, Map<K, V>? values) : super._(box, values);
 
   static Future<HiveMapRx<K, V>> create<K, V>(String boxName, {Map<K, V>? values}) async {
     final box = await Hive.openBox<V>(boxName);
@@ -29,9 +26,9 @@ class HiveMapRx<K, V> extends HiveMap<K, V> {
   }
 
   @override
-  void remove(K key) {
+  Future<void> remove(K key) async {
     final oldValue = this[key];
-    super.remove(key);
+    await super.remove(key);
 
     if (oldValue != null) {
       _controller.add(HiveMapEvent.removed(key));
@@ -39,19 +36,21 @@ class HiveMapRx<K, V> extends HiveMap<K, V> {
   }
 
   @override
-  void clear() {
+  Future<int> clear() async {
     final oldEntries = toMap();
-    super.clear();
+    final result = await super.clear();
 
     for (final entry in oldEntries.entries) {
       _controller.add(HiveMapEvent.removed(entry.key));
     }
+
+    return result;
   }
 
   @override
-  void addAll(Map<K, V> entries) {
+  Future<void> addAll(Map<K, V> entries) async {
     final oldEntries = toMap();
-    super.addAll(entries);
+    await super.addAll(entries);
 
     for (final entry in entries.entries) {
       final key = entry.key;
@@ -66,9 +65,9 @@ class HiveMapRx<K, V> extends HiveMap<K, V> {
   }
 
   @override
-  void dispose() {
-    _controller.close();
-    super.dispose();
+  Future<void> dispose() async {
+    await _controller.close();
+    await super.dispose();
   }
 
   void addListener(void Function(HiveMapEvent<K, V> event) listener) {

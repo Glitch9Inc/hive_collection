@@ -1,13 +1,12 @@
 name: hive_collection
 description: A lightweight Hive-based collection library for Dart and Flutter.
-version: 1.0.2
+version: 1.0.4
 repository: https://github.com/Glitch9Inc/hive_collection
 homepage: https://github.com/Glitch9Inc/hive_collection
 
 environment:
   sdk: ^3.6.2
-
-# Add regular dependencies here.
+ 
 dependencies:
   # hive: ^4.0.0-dev.2
   # isar: ^4.0.0-dev.14

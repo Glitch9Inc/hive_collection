@@ -1,4 +1,10 @@
-import 'package:hive_ce/hive.dart';
+import 'dart:async';
+
+import 'package:hive_ce/hive.dart' hide HiveList, HiveCollection;
+
+import '../../hive_collection.dart';
+
+part 'hive_list_rx.dart';
 
 /// #### Wrapper class for Hive Box to use it as a [List].
 /// * You MUST register adapter before using this class.
@@ -12,15 +18,25 @@ import 'package:hive_ce/hive.dart';
 class HiveList<T> {
   final Box<T> _box;
 
-  HiveList.internal(this._box, List<T>? values) {
+  HiveList._(this._box, List<T>? values) {
     if (values != null) {
       addAll(values);
     }
   }
 
   static Future<HiveList<T>> create<T>(String boxName, {List<T>? values}) async {
-    final box = await Hive.openBox<T>(boxName);
-    return HiveList<T>.internal(box, values);
+    try {
+      if (!Hive.isBoxOpen(boxName)) {
+        final box = await Hive.openBox<T>(boxName);
+        return HiveList<T>._(box, values);
+      } else {
+        final box = Hive.box<T>(boxName);
+        return HiveList<T>._(box, values);
+      }
+    } catch (e) {
+      print('Failed to create HiveList: $e');
+      rethrow;
+    }
   }
 
   T? operator [](int index) {
@@ -35,27 +51,20 @@ class HiveList<T> {
 
   int get length => _box.length;
 
-  void add(T value) {
-    try {
-      _box.add(value);
-      print('Added value to HiveList. HiveList now has ${_box.length} items');
-    } catch (e) {
-      print('Failed to add value to HiveList: $e');
-    }
-  }
+  Future<int> add(T value) => _box.add(value);
 
-  void addAll(Iterable<T> values) => _box.addAll(values);
+  Future<Iterable<int>> addAll(Iterable<T> values) => _box.addAll(values);
 
-  void insert(int index, T value) {
+  Future<void> insert(int index, T value) async {
     final list = toList();
     list.insert(index, value); // 리스트의 원하는 위치에 삽입
-    clear();
-    addAll(list); // 다시 Hive에 저장
+    await clear();
+    await addAll(list); // 다시 Hive에 저장
   }
 
-  void removeAt(int index) => _box.deleteAt(index);
+  Future<void> removeAt(int index) => _box.deleteAt(index);
 
-  void clear() => _box.clear();
+  Future<int> clear() => _box.clear();
 
   List<T> toList() {
     List<T> list = [];
@@ -71,20 +80,18 @@ class HiveList<T> {
     return list;
   }
 
-  void dispose() {
-    _box.close();
-  }
+  Future<void> dispose() => _box.close();
 
-  void sort([int Function(T a, T b)? compare]) {
+  Future<Iterable<int>> sort([int Function(T a, T b)? compare]) async {
     final list = toList();
     list.sort(compare);
-    clear();
-    addAll(list);
+    await clear();
+    return await addAll(list);
   }
 
-  void replaceAll(List<T> list) {
-    clear();
-    addAll(list);
+  Future<Iterable<int>> replaceAll(List<T> list) async {
+    await clear();
+    return await addAll(list);
   }
 
   void forEach(void Function(T element) f) {
